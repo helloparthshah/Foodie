@@ -70,7 +70,7 @@ class _FlutterVisionHomeState extends State<FlutterVisionHome> {
   Widget _cameraPreviewWidget() {
     if (controller == null || !controller.value.isInitialized) {
       return const Text(
-        'Tap a camera',
+        'Loading...',
         style: TextStyle(
           color: Colors.white,
           fontSize: 24.0,
@@ -93,7 +93,7 @@ class _FlutterVisionHomeState extends State<FlutterVisionHome> {
       children: <Widget>[
         IconButton(
           icon: const Icon(Icons.camera_alt),
-          color: Colors.blue,
+          color: Colors.white,
           onPressed: controller != null &&
                   controller.value.isInitialized 
               ? onTakePictureButtonPressed
@@ -130,17 +130,38 @@ class _FlutterVisionHomeState extends State<FlutterVisionHome> {
     final FirebaseVisionImage visionImage = FirebaseVisionImage.fromFilePath(imagePath);
     final TextRecognizer textRecognizer = FirebaseVision.instance.textRecognizer();
     final VisionText visionText = await textRecognizer.processImage(visionImage);
-    String text = visionText.text;
-          
+    /* String text = visionText.text; */
+    String text="";
+    int flag=0;
+    var nv={"carmine","carminic acid","cochineal","dripping","gelatin","hi-vegi-lip","hydrogenated tallow","isinglass","keratin","lard","lard oil","pancreatic extract","pancreatin","pepsin","pork fat","pork oil","suet","tallow","tallow flakes","trypsin"};
+    String newStr;
+    
+    for (TextBlock block in visionText.blocks) 
+    for (TextLine line in block.lines){
+    for (TextElement element in line.elements){
+      for(String nonv in nv){
+        newStr = element.text.replaceAll(",", "").toLowerCase();
+      if(newStr==nonv){
+        flag=1;
+        break;
+      }
+      }
+      text=text+newStr+" ";
+      }
+      text=text+"\n";
+    }
+
+    String status="The product is veg";
+    if (flag==1)
+    status="The product is non-veg";
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        // return object of type Dialog
         return AlertDialog(
-          title: new Text("Alert Dialog title"),
-          content: new Text(text),
+          title: new Text(status),
+          content: new SingleChildScrollView(child: SelectableText(text)),
           actions: <Widget>[
-            // usually buttons at the bottom of the dialog
             new FlatButton(
               child: new Text("Close"),
               onPressed: () {
@@ -162,7 +183,7 @@ class _FlutterVisionHomeState extends State<FlutterVisionHome> {
       return null;
     }
     final Directory extDir = await getApplicationDocumentsDirectory();
-    final String dirPath = '${extDir.path}/Pictures/flutter_vision';
+    final String dirPath = '${extDir.path}/Pictures/Foodie';
     await Directory(dirPath).create(recursive: true);
     final String filePath = '$dirPath/${timestamp()}.jpg';
 
@@ -198,7 +219,6 @@ class FlutterVisionApp extends StatelessWidget {
 List<CameraDescription> cameras;
 
 Future<void> main() async {
-  // Fetch the available cameras before initializing the app.
   WidgetsFlutterBinding.ensureInitialized();
   try {
     cameras = await availableCameras();
